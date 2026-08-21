@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { StopIcon, TopIcon } from '@/assets/icons';
 
 type Role = 'user' | 'assistant';
 type Message = { role: Role; content: string };
@@ -87,18 +88,46 @@ export default function Home() {
     }
   }
 
-  return (
-    <div className="flex h-dvh flex-col bg-zinc-50 text-zinc-900 dark:bg-black dark:text-zinc-100">
-      <header className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-        <h1 className="text-sm font-semibold">AI Chat</h1>
+  const form = (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        sendMessage();
+      }}
+      className="mx-auto flex w-full max-w-3xl items-end gap-2 relative bg-zinc-900 rounded-3xl p-2"
+    >
+      <textarea
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        rows={1}
+        placeholder="Ask anything"
+        className="max-h-40 resize-none px-4 py-2.5 text-sm outline-none flex-1"
+      />
+      {isLoading ? (
         <button
-          onClick={newChat}
-          className="rounded-md px-3 py-1 text-sm text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
+          type="button"
+          onClick={stopGenerating}
+          className="absolute right-2 top-2 rounded-full p-2.5 text-sm font-medium  transition disabled:cursor-not-allowed disabled:opacity-40 bg-accent text-white hover:bg-zinc-300"
         >
-          New chat
+          <StopIcon />
         </button>
-      </header>
+      ) : (
+        <div>
+          <button
+            type="submit"
+            disabled={!input.trim()}
+            className="absolute right-2 top-2 rounded-full p-2.5 text-sm font-medium  transition disabled:cursor-not-allowed disabled:opacity-40 bg-accent text-white hover:bg-zinc-300"
+          >
+            <TopIcon />
+          </button>
+        </div>
+      )}
+    </form>
+  )
 
+  return (
+    <div className="flex h-dvh flex-col  text-zinc-100 pb-4">
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6">
           {messages.length === 0 && (
@@ -107,6 +136,7 @@ export default function Home() {
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 Ask a question below. Responses stream in live.
               </p>
+              {form}
             </div>
           )}
 
@@ -122,8 +152,8 @@ export default function Home() {
               <div
                 className={
                   message.role === 'user'
-                    ? 'max-w-[85%] whitespace-pre-wrap rounded-2xl bg-zinc-900 px-4 py-2.5 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900'
-                    : 'max-w-[85%] whitespace-pre-wrap rounded-2xl bg-zinc-100 px-4 py-2.5 dark:bg-zinc-900'
+                    ? 'max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 bg-accent text-white opacity-95'
+                    : 'max-w-[85%] whitespace-pre-wrap px-4 py-2.5'
                 }
               >
                 {message.content ||
@@ -141,41 +171,8 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="border-t border-zinc-200 px-4 py-3 dark:border-zinc-800">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            sendMessage();
-          }}
-          className="mx-auto flex w-full max-w-3xl items-end gap-2"
-        >
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            rows={1}
-            placeholder="Message AI..."
-            className="max-h-40 flex-1 resize-none rounded-2xl border border-zinc-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-zinc-500"
-          />
-          {isLoading ? (
-            <button
-              type="button"
-              onClick={stopGenerating}
-              className="rounded-2xl bg-zinc-200 px-4 py-2.5 text-sm font-medium transition hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700"
-            >
-              Stop
-            </button>
-          ) : (
-            <button
-              type="submit"
-              disabled={!input.trim()}
-              className="rounded-2xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-zinc-50 transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-            >
-              Send
-            </button>
-          )}
-        </form>
-      </footer>
+      {messages.length !== 0 && form}
+
     </div>
   );
 }
