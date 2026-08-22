@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { StopIcon, TopIcon } from '@/assets/icons';
+import { RegisterModal } from '@/components/register-modal/register-modal';
 
 type Role = 'user' | 'assistant';
 type Message = { role: Role; content: string };
@@ -12,6 +13,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const [loginModal, setLoginModal] = useState(false);
+  const [signupModal, setSignupModal] = useState(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -88,6 +91,14 @@ export default function Home() {
     }
   }
 
+  const handleLogIn = () => {
+    setLoginModal(true);
+  }
+
+  const handleSignUp = () => {
+    setSignupModal(true);
+  }
+
   const form = (
     <form
       onSubmit={(e) => {
@@ -127,15 +138,16 @@ export default function Home() {
   )
 
   return (
-    <div className="flex h-dvh flex-col  text-zinc-100 pb-4">
+    <div className="flex h-dvh flex-col  text-zinc-100 pb-4 pt-1">
+      <header className="flex items-center justify-end gap-x-2">
+        <button onClick={() => handleLogIn()} className=' bg-zinc-100 text-black p-2.5 rounded-4xl hover:bg-zinc-300 transition-all cursor-pointer'>Log in</button>
+        <button onClick={() => handleSignUp()} className='border border-zinc-400 bg-zinc-800 text-white p-2.5 rounded-4xl hover:bg-zinc-600 transition-all cursor-pointer'>Sign up for free</button>
+      </header>
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6">
           {messages.length === 0 && (
-            <div className="flex flex-col items-center gap-2 py-24 text-center">
+            <div className="flex flex-col items-center gap-4 py-24 text-center">
               <h2 className="text-2xl font-semibold">How can I help you today?</h2>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                Ask a question below. Responses stream in live.
-              </p>
               {form}
             </div>
           )}
@@ -172,7 +184,9 @@ export default function Home() {
       </main>
 
       {messages.length !== 0 && form}
-
+      {
+        loginModal && <RegisterModal />
+      }
     </div>
   );
 }
