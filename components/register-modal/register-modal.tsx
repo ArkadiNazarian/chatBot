@@ -1,6 +1,7 @@
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { createPortal } from "react-dom";
+import { CloseIcon } from "@/assets/icons";
 
 interface RegisterForm {
     email: string;
@@ -10,7 +11,8 @@ interface RegisterForm {
 }
 
 interface RegisterProps {
-    mode?: 'signup' | 'login'
+    mode: 'signup' | 'login'
+    onCloseModal: () => void
 }
 
 export const RegisterModal = (props: RegisterProps) => {
@@ -31,10 +33,18 @@ export const RegisterModal = (props: RegisterProps) => {
             .required("Password is required"),
         firstName: yup
             .string()
-            .required("First name is required"),
+            .when([], {
+                is: () => props.mode === "signup",
+                then: (schema) => schema.required("First name is required"),
+                otherwise: (schema) => schema.notRequired(),
+            }),
         lastName: yup
             .string()
-            .required("Last name is required"),
+            .when([], {
+                is: () => props.mode === "signup",
+                then: (schema) => schema.required("Last name is required"),
+                otherwise: (schema) => schema.notRequired(),
+            }),
     });
 
     const onSubmit = (data: RegisterForm) => {
@@ -57,12 +67,16 @@ export const RegisterModal = (props: RegisterProps) => {
             />
 
             <div className="flex min-h-full items-center justify-center p-4 text-center">
+
                 <div
                     className="relative inline-block w-full max-w-lg transform overflow-hidden rounded-lg bg-[#303030] px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:p-6"
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="modal-title"
                 >
+                    <div onClick={props.onCloseModal} className="absolute cursor-pointer top-2 right-2 rounded-full p-2.5 text-sm font-medium  transition disabled:cursor-not-allowed disabled:opacity-40 bg-accent text-white hover:bg-zinc-300">
+                        <CloseIcon />
+                    </div>
                     {/* Header */}
                     <div>
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
@@ -88,20 +102,9 @@ export const RegisterModal = (props: RegisterProps) => {
                                 className="text-lg font-medium leading-6 text-zinc-100"
                                 id="modal-title"
                             >
-                                Sign up
+                                {props.mode === 'signup' ? 'Create an account' : 'Sign in to your account'}
                             </h3>
 
-                            <div className="mt-2">
-                                <p className="text-sm text-zinc-100">
-                                    Already have an account?{" "}
-                                    <a
-                                        href="#"
-                                        className="font-medium text-zinc-100 hover:text-zinc-300 transition-all"
-                                    >
-                                        Sign in
-                                    </a>
-                                </p>
-                            </div>
                         </div>
                     </div>
 
@@ -111,47 +114,55 @@ export const RegisterModal = (props: RegisterProps) => {
                             <div className="space-y-6 px-4 py-5 sm:p-6">
                                 <div className="grid grid-cols-6 gap-6">
                                     {/* First name */}
-                                    <div className="col-span-6 sm:col-span-3">
-                                        <input
-                                            type="text"
-                                            id="firstName"
-                                            name="firstName"
-                                            value={formik.values.firstName}
-                                            onChange={formik.handleChange}
-                                            onBlur={formik.handleBlur}
-                                            placeholder="first name"
-                                            className="mt-1 w-full rounded-md outline-none bg-black shadow-sm sm:text-sm h-8 px-1"
-                                        />
 
-                                        {formik.touched.firstName &&
-                                            formik.errors.firstName && (
-                                                <p className="mt-1 text-sm text-[#ff9b97]">
-                                                    {formik.errors.firstName}
-                                                </p>
-                                            )}
-                                    </div>
+                                    {
+                                        props.mode === "signup" && (
+                                            <>
+                                                <div className="col-span-6 sm:col-span-3">
+                                                    <input
+                                                        type="text"
+                                                        id="firstName"
+                                                        name="firstName"
+                                                        value={formik.values.firstName}
+                                                        onChange={formik.handleChange}
+                                                        onBlur={formik.handleBlur}
+                                                        placeholder="first name"
+                                                        className="mt-1 w-full rounded-md outline-none bg-black shadow-sm sm:text-sm h-8 px-1"
+                                                    />
 
-                                    {/* Last name */}
-                                    <div className="col-span-6 sm:col-span-3">
+                                                    {formik.touched.firstName &&
+                                                        formik.errors.firstName && (
+                                                            <p className="mt-1 text-sm text-[#ff9b97]">
+                                                                {formik.errors.firstName}
+                                                            </p>
+                                                        )}
+                                                </div>
 
-                                        <input
-                                            type="text"
-                                            id="lastName"
-                                            name="lastName"
-                                            value={formik.values.lastName}
-                                            onChange={formik.handleChange}
-                                            onBlur={formik.handleBlur}
-                                            placeholder="last name"
-                                            className="mt-1 w-full rounded-md outline-none bg-black shadow-sm sm:text-sm h-8 px-1"
-                                        />
+                                                {/* Last name */}
+                                                <div className="col-span-6 sm:col-span-3">
 
-                                        {formik.touched.lastName &&
-                                            formik.errors.lastName && (
-                                                <p className="mt-1 text-sm text-[#ff9b97]">
-                                                    {formik.errors.lastName}
-                                                </p>
-                                            )}
-                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        id="lastName"
+                                                        name="lastName"
+                                                        value={formik.values.lastName}
+                                                        onChange={formik.handleChange}
+                                                        onBlur={formik.handleBlur}
+                                                        placeholder="last name"
+                                                        className="mt-1 w-full rounded-md outline-none bg-black shadow-sm sm:text-sm h-8 px-1"
+                                                    />
+
+                                                    {formik.touched.lastName &&
+                                                        formik.errors.lastName && (
+                                                            <p className="mt-1 text-sm text-[#ff9b97]">
+                                                                {formik.errors.lastName}
+                                                            </p>
+                                                        )}
+                                                </div>
+                                            </>
+                                        )
+                                    }
+
 
                                     {/* Email */}
                                     <div className="col-span-6">
@@ -207,7 +218,7 @@ export const RegisterModal = (props: RegisterProps) => {
                                         type="submit"
                                         className="w-full bg-zinc-100 p-2 rounded-4xl text-black cursor-pointer hover:bg-zinc-300 transition-all"
                                     >
-                                        Create account
+                                        {props.mode === "signup" ? "Create account" : "Log in"}
                                     </button>
                                 </div>
                             </div>

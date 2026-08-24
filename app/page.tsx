@@ -99,6 +99,11 @@ export default function Home() {
     setSignupModal(true);
   }
 
+  const onCloseModal = () => {
+    setLoginModal(false);
+    setSignupModal(false);
+  }
+
   const form = (
     <form
       onSubmit={(e) => {
@@ -185,7 +190,10 @@ export default function Home() {
 
       {messages.length !== 0 && form}
       {
-        loginModal && <RegisterModal />
+        loginModal && <RegisterModal mode="login" onCloseModal={onCloseModal} />
+      }
+      {
+        signupModal && <RegisterModal mode="signup" onCloseModal={onCloseModal}/>
       }
     </div>
   );
