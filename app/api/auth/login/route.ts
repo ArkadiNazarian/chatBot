@@ -6,16 +6,17 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
 
         const isEmailExist = await checkEmail({ email: body.email });
+
         if (isEmailExist.status === 200) {
             return NextResponse.json({
                 success: true,
                 message: 'User logged in successfully',
                 data: isEmailExist.response
-            }, { status: 201 });
+            }, { status: 200 });
         } else {
             return NextResponse.json({
                 success: false,
-                message: "Failed to login",
+                message: "No user found with this email",
                 data: null
             }, { status: 400 });
         }

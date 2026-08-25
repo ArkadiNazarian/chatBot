@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
         };
 
         const isEmailExist = await checkEmail({ email: body.email });
-        if (isEmailExist.status === 404) {
+
+        if (isEmailExist.status === 200) {
             return NextResponse.json({
                 success: false,
                 message: 'Email already exists',

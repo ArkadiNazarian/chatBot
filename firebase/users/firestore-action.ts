@@ -68,7 +68,13 @@ export const signUp = async (value: ISignUpModel) => {
         });
         return {
             status: 200,
-            response: docRef
+            response: {
+                _id: value._id,
+                firstName: value.firstName,
+                lastName: value.lastName,
+                email: value.email,
+                password: value.password,
+            }
         };
     } catch (error) {
         return {

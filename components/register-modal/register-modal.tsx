@@ -2,6 +2,8 @@ import { useFormik } from "formik";
 import * as yup from "yup";
 import { createPortal } from "react-dom";
 import { CloseIcon } from "@/assets/icons";
+import { nanoid } from "nanoid";
+import { useUserStore } from "@/store/zustand";
 
 interface RegisterForm {
     email: string;
@@ -16,6 +18,9 @@ interface RegisterProps {
 }
 
 export const RegisterModal = (props: RegisterProps) => {
+
+    const userStore = useUserStore();
+
     const initialState: RegisterForm = {
         email: "",
         password: "",
@@ -46,9 +51,56 @@ export const RegisterModal = (props: RegisterProps) => {
                 otherwise: (schema) => schema.notRequired(),
             }),
     });
-
+console.log(userStore.userData);
     const onSubmit = (data: RegisterForm) => {
-        console.log(data);
+        if (props.mode === "signup") {
+            fetch("/api/auth/signup", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: data.email,
+                    password: data.password,
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    _id: nanoid()
+                }),
+            })
+                .then((res) => res.json())
+                .then((response) => {
+                    userStore.setUserData({
+                        firstName: response.data.firstName,
+                        lastName: response.data.lastName,
+                        email: response.data.email,
+                        _id: response.data._id
+                    });
+                }).catch((err) => {
+                    console.log(err);
+                })
+        } else {
+            fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: data.email,
+                    password: data.password,
+                }),
+            })
+                .then((res) => res.json())
+                .then((response) => {
+                     userStore.setUserData({
+                        firstName: response.data.firstName,
+                        lastName: response.data.lastName,
+                        email: response.data.email,
+                        _id: response.data._id
+                    });
+                }).catch((err) => {
+                    console.log(err);
+                })
+        }
     };
 
     const formik = useFormik({
