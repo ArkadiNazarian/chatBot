@@ -3,11 +3,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { StopIcon, TopIcon } from '@/assets/icons';
 import { RegisterModal } from '@/components/register-modal/register-modal';
+import { useUserStore } from '@/store/zustand';
 
 type Role = 'user' | 'assistant';
 type Message = { role: Role; content: string };
 
 export default function Home() {
+
+  const userStore = useUserStore();
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -15,6 +19,7 @@ export default function Home() {
   const abortRef = useRef<AbortController | null>(null);
   const [loginModal, setLoginModal] = useState(false);
   const [signupModal, setSignupModal] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -104,6 +109,25 @@ export default function Home() {
     setSignupModal(false);
   }
 
+  const handleLogOut = () => {
+    userStore.setUserData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      _id: ""
+    });
+  }
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (userStore.userData._id) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+    }, 50);
+  }, [userStore.userData._id])
+
   const form = (
     <form
       onSubmit={(e) => {
@@ -145,8 +169,16 @@ export default function Home() {
   return (
     <div className="flex h-dvh flex-col  text-zinc-100 pb-4 pt-1">
       <header className="flex items-center justify-end gap-x-2">
-        <button onClick={() => handleLogIn()} className=' bg-zinc-100 text-black p-2.5 rounded-4xl hover:bg-zinc-300 transition-all cursor-pointer'>Log in</button>
-        <button onClick={() => handleSignUp()} className='border border-zinc-400 bg-zinc-800 text-white p-2.5 rounded-4xl hover:bg-zinc-600 transition-all cursor-pointer'>Sign up for free</button>
+        {
+          isLoggedIn !== null && (isLoggedIn ? <button onClick={() => handleLogOut()} className=' bg-zinc-100 text-black p-2.5 rounded-4xl hover:bg-zinc-300 transition-all cursor-pointer'>Log out</button>
+            :
+            <>
+              <button onClick={() => handleLogIn()} className=' bg-zinc-100 text-black p-2.5 rounded-4xl hover:bg-zinc-300 transition-all cursor-pointer'>Log in</button>
+              <button onClick={() => handleSignUp()} className='border border-zinc-400 bg-zinc-800 text-white p-2.5 rounded-4xl hover:bg-zinc-600 transition-all cursor-pointer'>Sign up for free</button>
+            </>
+          )
+        }
+
       </header>
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6">
@@ -193,7 +225,7 @@ export default function Home() {
         loginModal && <RegisterModal mode="login" onCloseModal={onCloseModal} />
       }
       {
-        signupModal && <RegisterModal mode="signup" onCloseModal={onCloseModal}/>
+        signupModal && <RegisterModal mode="signup" onCloseModal={onCloseModal} />
       }
     </div>
   );

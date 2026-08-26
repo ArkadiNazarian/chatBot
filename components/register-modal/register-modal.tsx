@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { CloseIcon } from "@/assets/icons";
 import { nanoid } from "nanoid";
 import { useUserStore } from "@/store/zustand";
+import { toast } from "react-toastify";
 
 interface RegisterForm {
     email: string;
@@ -51,7 +52,7 @@ export const RegisterModal = (props: RegisterProps) => {
                 otherwise: (schema) => schema.notRequired(),
             }),
     });
-console.log(userStore.userData);
+
     const onSubmit = (data: RegisterForm) => {
         if (props.mode === "signup") {
             fetch("/api/auth/signup", {
@@ -75,8 +76,9 @@ console.log(userStore.userData);
                         email: response.data.email,
                         _id: response.data._id
                     });
+                    props.onCloseModal();
                 }).catch((err) => {
-                    console.log(err);
+                    toast.error(err.message || "An error occurred while signing up.");
                 })
         } else {
             fetch("/api/auth/login", {
@@ -97,8 +99,9 @@ console.log(userStore.userData);
                         email: response.data.email,
                         _id: response.data._id
                     });
+                    props.onCloseModal();
                 }).catch((err) => {
-                    console.log(err);
+                    toast.error(err.message || "An error occurred while logging in.");
                 })
         }
     };
