@@ -17,6 +17,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const roomIdRef = useRef<string>('');
   const [loginModal, setLoginModal] = useState(false);
   const [signupModal, setSignupModal] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
@@ -43,6 +44,8 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
+          userId: userStore.userData._id,
+          roomId: roomIdRef.current || undefined
         }),
         signal: controller.signal,
       });
@@ -50,6 +53,11 @@ export default function Home() {
       if (!res.ok || !res.body) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? `Request failed (${res.status})`);
+      }
+
+      const roomId = res.headers.get('X-Room-Id');
+      if (roomId) {
+        roomIdRef.current = roomId;
       }
 
       setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
@@ -87,6 +95,7 @@ export default function Home() {
   function newChat() {
     if (isLoading) stopGenerating();
     setMessages([]);
+    roomIdRef.current = '';
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {

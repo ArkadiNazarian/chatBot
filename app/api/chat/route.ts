@@ -1,5 +1,7 @@
 import { OpenRouter } from '@openrouter/sdk';
 import type { ChatStreamChunk } from '@openrouter/sdk/models';
+import { GetLastChat, SendMessage } from '@/firebase/chats/firstore-action';
+import { nanoid } from 'nanoid';
 
 const MODEL = process.env.OPENROUTER_MODEL ?? 'nvidia/nemotron-3.5-lightning:free';
 
@@ -9,7 +11,11 @@ type ChatMessage = {
 };
 
 export async function POST(req: Request) {
-  const { messages } = (await req.json()) as { messages?: ChatMessage[] };
+  const { messages, roomId, userId } = (await req.json()) as {
+    messages?: ChatMessage[];
+    roomId?: string;
+    userId: string;
+  };
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return Response.json({ error: 'A non-empty messages array is required.' }, { status: 400 });
@@ -17,6 +23,34 @@ export async function POST(req: Request) {
 
   if (!process.env.OPENROUTER_API_KEY) {
     return Response.json({ error: 'OPENROUTER_API_KEY is not set.' }, { status: 500 });
+  }
+
+  // Reuse the last chat for this room when it exists; otherwise start a new room.
+  let room = roomId;
+  if (room) {
+    const lastChat = await GetLastChat(room);
+    if (lastChat.status !== 200) {
+      room = undefined;
+    }
+  }
+  if (!room) {
+    room = nanoid();
+  }
+
+  // Persist the latest message to Firebase for the current room.
+  const lastMessage = messages[messages.length - 1];
+  if (lastMessage && lastMessage.role !== 'system') {
+    await SendMessage({
+      _id: nanoid(),
+      roomId: room,
+      timestamp: Date.now(),
+      userId: userId,
+      messages: {
+        role: lastMessage.role,
+        content: lastMessage.content,
+        timestamp: Date.now(),
+      },
+    });
   }
 
   const openrouter = new OpenRouter({
@@ -41,6 +75,7 @@ export async function POST(req: Request) {
   }
 
   const encoder = new TextEncoder();
+  let assistantReply = '';
 
   const readable = new ReadableStream({
     async start(controller) {
@@ -48,8 +83,23 @@ export async function POST(req: Request) {
         for await (const chunk of stream) {
           const content = chunk.choices?.[0]?.delta?.content;
           if (content) {
+            assistantReply += content;
             controller.enqueue(encoder.encode(content));
           }
+        }
+        // Persist the assistant's streamed reply once it is complete.
+        if (assistantReply) {
+          await SendMessage({
+            _id: nanoid(),
+            roomId: room,
+            userId: userId,
+            timestamp: Date.now(),
+            messages: {
+              role: 'assistant',
+              content: assistantReply,
+              timestamp: Date.now(),
+            },
+          });
         }
         controller.close();
       } catch (error) {
@@ -62,6 +112,7 @@ export async function POST(req: Request) {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
       'X-Content-Type-Options': 'nosniff',
+      'X-Room-Id': room,
     },
   });
 }
