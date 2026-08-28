@@ -1,10 +1,13 @@
 import { OpenRouter } from '@openrouter/sdk';
 import type { ChatStreamChunk } from '@openrouter/sdk/models';
-import { GetLastChat, SendMessage } from '@/firebase/chats/firstore-action';
+import { GetLastChat, SendMessage } from '@/firebase/chats/firestore-action';
 import { nanoid } from 'nanoid';
+import { MakeRoom } from '@/firebase/rooms/firestore-action';
 
-const MODEL = process.env.OPENROUTER_MODEL ?? 'nvidia/nemotron-3.5-lightning:free';
+const MODEL = 'inclusionai/ling-3.0-flash-fin:free'
 
+// 'inclusionai/ling-3.0-flash-fin:free'
+// 'nvidia/nemotron-3.5-lightning:free'
 type ChatMessage = {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -33,25 +36,11 @@ export async function POST(req: Request) {
       room = undefined;
     }
   }
-  if (!room) {
-    room = nanoid();
-  }
+
 
   // Persist the latest message to Firebase for the current room.
   const lastMessage = messages[messages.length - 1];
-  if (lastMessage && lastMessage.role !== 'system') {
-    await SendMessage({
-      _id: nanoid(),
-      roomId: room,
-      timestamp: Date.now(),
-      userId: userId,
-      messages: {
-        role: lastMessage.role,
-        content: lastMessage.content,
-        timestamp: Date.now(),
-      },
-    });
-  }
+
 
   const openrouter = new OpenRouter({
     apiKey: process.env.OPENROUTER_API_KEY,
@@ -89,6 +78,34 @@ export async function POST(req: Request) {
         }
         // Persist the assistant's streamed reply once it is complete.
         if (assistantReply) {
+
+          if (!room) {
+            room = nanoid();
+            const makeRoom = await MakeRoom({
+              _id: room,
+              timestamp: Date.now(),
+              title: messages[messages.length - 1].content.slice(0, 15),
+              userId: userId,
+            });
+            if (makeRoom.status !== 200) {
+              return Response.json({ error: 'Failed to create a new room.' }, { status: 500 });
+            }
+          }
+
+          if (lastMessage && lastMessage.role !== 'system') {
+            await SendMessage({
+              _id: nanoid(),
+              roomId: room,
+              timestamp: Date.now(),
+              userId: userId,
+              messages: {
+                role: lastMessage.role,
+                content: lastMessage.content,
+                timestamp: Date.now(),
+              },
+            });
+          }
+
           await SendMessage({
             _id: nanoid(),
             roomId: room,

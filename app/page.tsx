@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { StopIcon, TopIcon } from '@/assets/icons';
 import { RegisterModal } from '@/components/register-modal/register-modal';
 import { useUserStore } from '@/store/zustand';
+import { Sidebar } from '@/components/sidebar/sidebar';
 
 type Role = 'user' | 'assistant';
 type Message = { role: Role; content: string };
@@ -176,7 +177,7 @@ export default function Home() {
   )
 
   return (
-    <div className="flex h-dvh flex-col  text-zinc-100 pb-4 pt-1">
+    <div className="flex h-dvh flex-col  text-zinc-100 pb-4 pt-1 relative">
       <header className="flex items-center justify-end gap-x-2">
         {
           isLoggedIn !== null && (isLoggedIn ? <button onClick={() => handleLogOut()} className=' bg-zinc-100 text-black p-2.5 rounded-4xl hover:bg-zinc-300 transition-all cursor-pointer'>Log out</button>
@@ -189,7 +190,9 @@ export default function Home() {
         }
 
       </header>
-      <main className="flex-1 overflow-y-auto">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto ">
+        
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6">
           {messages.length === 0 && (
             <div className="flex flex-col items-center gap-4 py-24 text-center">
