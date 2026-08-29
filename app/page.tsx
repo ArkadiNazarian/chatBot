@@ -5,6 +5,8 @@ import { StopIcon, TopIcon } from '@/assets/icons';
 import { RegisterModal } from '@/components/register-modal/register-modal';
 import { useUserStore } from '@/store/zustand';
 import { Sidebar } from '@/components/sidebar/sidebar';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { GetChats } from '@/firebase/chats/firestore-action';
 
 type Role = 'user' | 'assistant';
 type Message = { role: Role; content: string };
@@ -22,6 +24,37 @@ export default function Home() {
   const [loginModal, setLoginModal] = useState(false);
   const [signupModal, setSignupModal] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const router = useRouter();
+
+  const params = useSearchParams();
+
+  const roomId = params.get('roomId');
+
+  useEffect(() => {
+    if (roomId) {
+      const roomIdStr = Array.isArray(roomId) ? roomId[0] : roomId;
+      roomIdRef.current = roomIdStr;
+
+      (async () => {
+
+        fetch(`/api/chat/${roomIdStr}`)
+          .then((res) => res.json())
+          .then((response) => {
+
+            const loaded: Message[] = response.data?.map((chat: any) => ({
+              role: chat.messages.role,
+              content: chat.messages.content,
+            })) || [];
+            
+            setMessages(loaded);
+          });
+
+      })();
+    } else {
+      roomIdRef.current = '';
+      setMessages([]);
+    }
+  }, [roomId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -95,6 +128,7 @@ export default function Home() {
 
   function newChat() {
     if (isLoading) stopGenerating();
+    router.replace('/');
     setMessages([]);
     roomIdRef.current = '';
   }
@@ -175,7 +209,7 @@ export default function Home() {
       )}
     </form>
   )
-
+console.log(!(!!roomId));
   return (
     <div className="flex h-dvh flex-col  text-zinc-100 pb-4 pt-1 relative">
       <header className="flex items-center justify-end gap-x-2">
@@ -190,11 +224,11 @@ export default function Home() {
         }
 
       </header>
-      <Sidebar onClickNewChat={newChat}/>
+      <Sidebar onClickNewChat={newChat} />
       <main className="flex-1 overflow-y-auto ">
-        
+
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6">
-          {messages.length === 0 && (
+          {messages.length === 0 && !(!!roomId) && (
             <div className="flex flex-col items-center gap-4 py-24 text-center">
               <h2 className="text-2xl font-semibold">How can I help you today?</h2>
               {form}

@@ -36,6 +36,30 @@ export const GetLastChat = async (roomId: string) => {
     }
 }
 
+export const GetChats = async (roomId: string) => {
+
+    try {
+        const get_chats_query = query(collection(db, collection_name), where("roomId", "==", roomId))
+        const querySnapshot = await getDocs(get_chats_query);
+        const arr: Array<ChatModel> = [];
+
+        querySnapshot.forEach((doc) => {
+            arr.push(doc.data() as ChatModel);
+        });
+
+
+        return {
+            status: 200,
+            response: arr
+        };
+
+    } catch (error) {
+        return {
+            status: 500
+        }
+    }
+}
+
 export const SendMessage = async (value: ChatModel) => {
     try {
         const docRef = await addDoc(chats__collection, {

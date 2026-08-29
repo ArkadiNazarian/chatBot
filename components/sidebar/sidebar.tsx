@@ -3,6 +3,7 @@ import { db } from "@/firebase/config";
 import { RoomModel } from "@/firebase/rooms/model";
 import { useUserStore } from "@/store/zustand";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface SidebarProps {
@@ -12,6 +13,7 @@ interface SidebarProps {
 export const Sidebar = (props: SidebarProps) => {
 
     const userStore = useUserStore()
+    const router = useRouter()
 
     const [rooms, setRooms] = useState<Array<{ id: string; } & RoomModel>>([])
 
@@ -29,6 +31,10 @@ export const Sidebar = (props: SidebarProps) => {
             })
     }, [userStore.userData._id])
 
+    const onclickRoom = (roomId: string) => {
+        router.push(`?roomId=${roomId}`)
+    }
+
     return (
         <div className="flex flex-col w-64 h-screen bg-gray-900 p-4 absolute left-0 top-0 gap-3 overflow-y-auto">
             <p className="text-blue-500 text-xl pb-6">AI CHATBOT</p>
@@ -39,9 +45,9 @@ export const Sidebar = (props: SidebarProps) => {
             {
                 rooms.map((room, index) => {
                     return (
-                        <div key={index}>
+                        <div key={room._id}>
 
-                            <button className="text-left text-zinc-200 hover:bg-gray-700 rounded w-full px-2 hover:cursor-pointer transition-all">{room.title}</button>
+                            <button onClick={() => onclickRoom(room._id)} className="text-left text-zinc-200 hover:bg-gray-700 rounded w-full px-2 hover:cursor-pointer transition-all">{room.title}</button>
                         </div>
                     )
                 })
