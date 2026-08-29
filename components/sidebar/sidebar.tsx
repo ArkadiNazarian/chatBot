@@ -1,10 +1,15 @@
+import { NewChatIcon } from "@/assets/icons";
 import { db } from "@/firebase/config";
 import { RoomModel } from "@/firebase/rooms/model";
 import { useUserStore } from "@/store/zustand";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
-export const Sidebar = () => {
+interface SidebarProps {
+    onClickNewChat: () => void;
+}
+
+export const Sidebar = (props: SidebarProps) => {
 
     const userStore = useUserStore()
 
@@ -16,7 +21,8 @@ export const Sidebar = () => {
 
         onSnapshot(get_chats_collection, (snapshot) => {
             const array = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })) as Array<{ id: string; } & RoomModel>
-            setRooms(array)
+            const sortedArray = array.sort((a, b) => b.timestamp - a.timestamp)
+            setRooms(sortedArray)
         },
             (error) => {
                 console.error('Firebase connection error:', error);
@@ -25,7 +31,11 @@ export const Sidebar = () => {
 
     return (
         <div className="flex flex-col w-64 h-screen bg-gray-900 p-4 absolute left-0 top-0 gap-3 overflow-y-auto">
-            <div className="text-blue-500 text-xl pb-6">AI CHATBOT</div>
+            <p className="text-blue-500 text-xl pb-6">AI CHATBOT</p>
+            <button onClick={props.onClickNewChat} className="text-left text-blue-400 hover:bg-gray-700 rounded w-full px-2 hover:cursor-pointer transition-all py-3 flex items-center gap-1">
+                <NewChatIcon />
+                New Chat
+            </button>
             {
                 rooms.map((room, index) => {
                     return (
