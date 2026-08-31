@@ -186,6 +186,7 @@ export default function Home() {
         onKeyDown={handleKeyDown}
         rows={1}
         placeholder="Ask anything"
+        autoFocus
         className="max-h-40 resize-none px-4 py-2.5 text-sm outline-none flex-1"
       />
       {isLoading ? (
@@ -209,7 +210,7 @@ export default function Home() {
       )}
     </form>
   )
-console.log(!(!!roomId));
+
   return (
     <div className="flex h-dvh flex-col  text-zinc-100 pb-4 pt-1 relative">
       <header className="flex items-center justify-end gap-x-2">
